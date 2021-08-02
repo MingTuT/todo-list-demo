@@ -1,0 +1,93 @@
+<template>
+	<li class="todo-item">
+		<div>
+			<input type="checkbox" v-model="isCompleted" />
+			<span>{{ todoitem.title }}</span>
+		</div>
+		<button @click="del(index)" class="delBtn">删除</button>
+	</li>
+</template>
+
+<script lang="ts">
+	import {
+		defineComponent,
+		computed,
+		reactive,
+		inject
+	} from 'vue'
+	import {
+		Todo
+	} from "@/types/todo";
+
+	export default defineComponent({
+		name: 'ListItem',
+		props: {
+			todoitem: { //函数返回的是Todo类型
+				type: Object as() => Todo,
+				required: true
+			},
+			index: {
+				type: Number
+			}
+		},
+		setup(props, context) {
+			// 当复选框选中时，所选事件下标索引将添加到selectedItemList中
+			let selectedItemList = reactive([])
+			if(window.sessionStorage.getItem('selectedItemList')) {
+				 selectedItemList = JSON.parse(window.sessionStorage.getItem('selectedItemList')+'')
+				 selectedItemList.push()
+			}
+			const delTodo:Function|undefined = inject('delTodo')
+			const updateState: Function | undefined = inject('updateState')
+
+			const isCompleted = computed({
+				get() {
+					return props.todoitem.isCompleted
+				},
+				set(val) {
+					if (typeof updateState === 'function') updateState(props.todoitem, val)
+				}
+			})
+			const del = (index: number) => {
+				if(window.confirm("确认删除吗？")) {
+					if(typeof delTodo === 'function') delTodo(index)
+				}
+			}
+
+			return {
+				isCompleted,
+				del
+			}
+		}
+	})
+</script>
+
+<style scoped>
+	.todo-item {
+		border: 1px solid lightblue;
+		list-style: none;
+		width: 100%;
+		padding: 5px;
+		margin-left: -40px;
+		border-radius: 5px;
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.delBtn {
+		background-color: #e95b47;
+		color: #fff;
+		border-radius: 5px;
+		border: none;
+		display: none;
+	}
+
+	.todo-item:hover {
+		color: lightcoral;
+		background-color: rgba(137, 190, 78, .3);
+	}
+
+	.todo-item:hover .delBtn {
+		display: block;
+	}
+</style>
